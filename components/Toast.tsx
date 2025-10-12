@@ -160,22 +160,22 @@ const ToastItem: React.FC<ToastItemProps> = ({ toast, onRemove }) => {
   );
 };
 
-// Convenience functions for different toast types
-export const toast = {
-  success: (title: string, message?: string) => {
-    const context = useToast();
-    context.addToast({ type: 'success', title, message });
-  },
-  error: (title: string, message?: string) => {
-    const context = useToast();
-    context.addToast({ type: 'error', title, message });
-  },
-  warning: (title: string, message?: string) => {
-    const context = useToast();
-    context.addToast({ type: 'warning', title, message });
-  },
-  info: (title: string, message?: string) => {
-    const context = useToast();
-    context.addToast({ type: 'info', title, message });
-  }
+// Convenience hook for different toast types
+export const useToastActions = () => {
+  const context = useToast();
+
+  return {
+    success: (title: string, message?: string) => {
+      context.addToast({ type: 'success', title, message });
+    },
+    error: (title: string, message?: string) => {
+      context.addToast({ type: 'error', title, message });
+    },
+    warning: (title: string, message?: string) => {
+      context.addToast({ type: 'warning', title, message });
+    },
+    info: (title: string, message?: string) => {
+      context.addToast({ type: 'info', title, message });
+    }
+  };
 };

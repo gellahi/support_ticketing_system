@@ -3,7 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { SkeletonCard, SkeletonRectangular } from '@/components/Skeleton';
 
 interface DatabaseStatus {
   isConnected: boolean;
