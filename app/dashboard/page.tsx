@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { SkeletonStats, SkeletonListItem } from '@/components/Skeleton';
 import { ConfirmDialog } from '@/components/Dialog';
+import { useToast } from '@/components/Toast';
 
 interface Ticket {
   _id: string;
@@ -38,6 +39,7 @@ interface PaginationInfo {
 export default function EnhancedDashboardPage() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { addToast } = useToast();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [stats, setStats] = useState<TicketStats | null>(null);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
@@ -153,8 +155,18 @@ export default function EnhancedDashboardPage() {
         setFormData({ title: '', description: '', priority: 'medium', category: 'general' });
         setShowCreateForm(false);
         fetchTickets(); // Refresh tickets
+        addToast({
+          type: 'success',
+          title: 'Ticket Created',
+          message: 'Your ticket has been created successfully.'
+        });
       } else {
         setError(data.error || 'Failed to create ticket');
+        addToast({
+          type: 'error',
+          title: 'Failed to Create Ticket',
+          message: data.error || 'An error occurred while creating the ticket.'
+        });
       }
     } catch {
       setError('Failed to create ticket');
@@ -182,11 +194,20 @@ export default function EnhancedDashboardPage() {
       if (response.ok) {
         fetchTickets(); // Refresh tickets
         setDeleteDialog({ isOpen: false, ticketId: '', ticketTitle: '' });
-        // TODO: Add success toast
+        addToast({
+          type: 'success',
+          title: 'Ticket Deleted',
+          message: 'The ticket has been deleted successfully.'
+        });
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to delete ticket');
         setDeleteDialog({ isOpen: false, ticketId: '', ticketTitle: '' });
+        addToast({
+          type: 'error',
+          title: 'Failed to Delete Ticket',
+          message: data.error || 'An error occurred while deleting the ticket.'
+        });
       }
     } catch {
       setError('Failed to delete ticket');
@@ -207,9 +228,19 @@ export default function EnhancedDashboardPage() {
 
       if (response.ok) {
         fetchTickets(); // Refresh tickets
+        addToast({
+          type: 'success',
+          title: 'Ticket Status Updated',
+          message: `Ticket status has been changed to ${newStatus}.`
+        });
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to update ticket');
+        addToast({
+          type: 'error',
+          title: 'Failed to Update Status',
+          message: data.error || 'An error occurred while updating the ticket status.'
+        });
       }
     } catch {
       setError('Failed to update ticket');
@@ -310,7 +341,6 @@ export default function EnhancedDashboardPage() {
           message={`Are you sure you want to delete "${deleteDialog.ticketTitle}"? This action cannot be undone.`}
           confirmText="Delete"
           confirmVariant="danger"
-          loading={false}
         />
       </div>
     );
