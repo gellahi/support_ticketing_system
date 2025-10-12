@@ -126,10 +126,16 @@ export default function AuditLogsPage() {
             </div>
             <div className="flex space-x-4">
               <button
+                onClick={() => router.push('/admin/settings')}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Settings
+              </button>
+              <button
                 onClick={() => router.push('/dashboard')}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
               >
-                Back to Dashboard
+                Dashboard
               </button>
               <button
                 onClick={() => router.push('/api/auth/signout')}
