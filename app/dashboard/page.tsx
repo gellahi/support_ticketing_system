@@ -176,7 +176,7 @@ export default function EnhancedDashboardPage() {
   };
 
   // Delete ticket
-  const handleDeleteTicket = async (ticketId: string) => {
+  const handleDeleteTicket = (ticketId: string) => {
     const ticket = tickets.find(t => t._id === ticketId);
     setDeleteDialog({
       isOpen: true,
@@ -733,6 +733,16 @@ export default function EnhancedDashboardPage() {
           </div>
         </div>
       </main>
+
+      <ConfirmDialog
+        isOpen={deleteDialog.isOpen}
+        onClose={() => setDeleteDialog({ isOpen: false, ticketId: '', ticketTitle: '' })}
+        onConfirm={confirmDeleteTicket}
+        title="Delete Ticket"
+        message={`Are you sure you want to delete "${deleteDialog.ticketTitle}"? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="danger"
+      />
     </div>
   );
 }
