@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { SkeletonCard, SkeletonRectangular } from '@/components/Skeleton';
 
 interface DatabaseStatus {
   isConnected: boolean;
@@ -22,6 +23,7 @@ export default function AdminSettingsPage() {
   const router = useRouter();
   const [dbInfo, setDbInfo] = useState<DatabaseInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [testing, setTesting] = useState<{ primary: boolean; secondary: boolean }>({
     primary: false,
@@ -47,7 +49,7 @@ export default function AdminSettingsPage() {
     try {
       const response = await fetch('/api/admin/database');
       const data = await response.json();
-      
+
       if (response.ok) {
         setDbInfo(data);
       } else {
@@ -57,6 +59,7 @@ export default function AdminSettingsPage() {
       setError('Failed to fetch database status');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -137,8 +140,92 @@ export default function AdminSettingsPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Skeleton */}
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div>
+                <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
+              </div>
+              <div className="flex space-x-4">
+                <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
+                <div className="h-10 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-10 bg-gray-200 rounded w-20 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Skeleton */}
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {/* Database Management Skeleton */}
+            <div className="bg-white shadow rounded-lg p-6 mb-6">
+              <div className="h-6 bg-gray-200 rounded w-48 mb-4 animate-pulse"></div>
+
+              <div className="space-y-6">
+                {/* Current Status Skeleton */}
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <div className="h-5 bg-gray-200 rounded w-40 mb-3 animate-pulse"></div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-16 mb-2 animate-pulse"></div>
+                      <div className="h-5 bg-gray-200 rounded w-20 animate-pulse"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-12 mb-2 animate-pulse"></div>
+                      <div className="h-5 bg-gray-200 rounded w-16 animate-pulse"></div>
+                    </div>
+                    <div>
+                      <div className="h-4 bg-gray-200 rounded w-20 mb-2 animate-pulse"></div>
+                      <div className="h-5 bg-gray-200 rounded w-8 animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Database Controls Skeleton */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Primary Database Skeleton */}
+                  <div className="border rounded-lg p-4">
+                    <div className="h-5 bg-gray-200 rounded w-32 mb-3 animate-pulse"></div>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="h-4 bg-gray-200 rounded w-12 mb-2 animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <div className="h-8 bg-gray-200 rounded w-16 animate-pulse"></div>
+                        <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Secondary Database Skeleton */}
+                  <div className="border rounded-lg p-4">
+                    <div className="h-5 bg-gray-200 rounded w-36 mb-3 animate-pulse"></div>
+                    <div className="space-y-3">
+                      <div>
+                        <div className="h-4 bg-gray-200 rounded w-12 mb-2 animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                      </div>
+                      <div className="flex space-x-2">
+                        <div className="h-8 bg-gray-200 rounded w-16 animate-pulse"></div>
+                        <div className="h-8 bg-gray-200 rounded w-20 animate-pulse"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Refresh Button Skeleton */}
+                <div className="flex justify-center">
+                  <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -294,10 +381,14 @@ export default function AdminSettingsPage() {
                 {/* Refresh Button */}
                 <div className="flex justify-center">
                   <button
-                    onClick={fetchDatabaseStatus}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                    onClick={() => {
+                      setRefreshing(true);
+                      fetchDatabaseStatus();
+                    }}
+                    disabled={refreshing}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Refresh Status
+                    {refreshing ? 'Refreshing...' : 'Refresh Status'}
                   </button>
                 </div>
               </div>

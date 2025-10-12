@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { SkeletonTableRow } from '@/components/Skeleton';
 
 interface AuditLog {
   _id: string;
@@ -19,6 +20,7 @@ export default function AuditLogsPage() {
   const router = useRouter();
   const [logs, setLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [logsLoading, setLogsLoading] = useState(false);
   const [error, setError] = useState('');
   const [total, setTotal] = useState(0);
   const [hasMore, setHasMore] = useState(false);
@@ -67,8 +69,9 @@ export default function AuditLogsPage() {
 
   // Load more logs
   const loadMore = () => {
+    setLogsLoading(true);
     const newSkip = skip + limit;
-    fetchAuditLogs(newSkip, true);
+    fetchAuditLogs(newSkip, true).finally(() => setLogsLoading(false));
   };
 
   // Format action for display
@@ -102,8 +105,60 @@ export default function AuditLogsPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Skeleton */}
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div>
+                <div className="h-8 bg-gray-200 rounded w-32 mb-2 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-48 animate-pulse"></div>
+              </div>
+              <div className="flex space-x-4">
+                <div className="h-10 bg-gray-200 rounded w-20 animate-pulse"></div>
+                <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
+                <div className="h-10 bg-gray-200 rounded w-20 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Skeleton */}
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {/* Audit Logs Table Skeleton */}
+            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        When
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Who
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Action
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Details
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        IP Address
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {Array.from({ length: 10 }).map((_, i) => (
+                      <SkeletonTableRow key={i} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
@@ -214,9 +269,10 @@ export default function AuditLogsPage() {
               <div className="px-6 py-4 border-t border-gray-200">
                 <button
                   onClick={loadMore}
-                  className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
+                  disabled={logsLoading}
+                  className="w-full px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Load More ({logs.length} of {total})
+                  {logsLoading ? 'Loading...' : `Load More (${logs.length} of ${total})`}
                 </button>
               </div>
             )}

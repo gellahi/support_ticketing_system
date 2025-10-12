@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { SkeletonStats, SkeletonListItem } from '@/components/Skeleton';
+import { ConfirmDialog } from '@/components/Dialog';
 
 interface Ticket {
   _id: string;
@@ -40,6 +42,7 @@ export default function EnhancedDashboardPage() {
   const [stats, setStats] = useState<TicketStats | null>(null);
   const [pagination, setPagination] = useState<PaginationInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [formData, setFormData] = useState({
@@ -49,6 +52,11 @@ export default function EnhancedDashboardPage() {
     category: 'general' as 'technical' | 'billing' | 'general' | 'feature_request' | 'bug_report'
   });
   const [submitting, setSubmitting] = useState(false);
+  const [deleteDialog, setDeleteDialog] = useState<{ isOpen: boolean; ticketId: string; ticketTitle: string }>({
+    isOpen: false,
+    ticketId: '',
+    ticketTitle: ''
+  });
   
   // Filter and search states
   const [filters, setFilters] = useState({
@@ -72,8 +80,8 @@ export default function EnhancedDashboardPage() {
   // Fetch tickets with filters
   const fetchTickets = async () => {
     try {
-      setLoading(true);
-      
+      setTicketsLoading(true);
+
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
         if (value && value !== 'all') {
@@ -83,7 +91,7 @@ export default function EnhancedDashboardPage() {
 
       const response = await fetch(`/api/tickets?${params.toString()}`);
       const data = await response.json();
-      
+
       if (response.ok) {
         setTickets(data.tickets);
         setStats(data.stats);
@@ -94,16 +102,17 @@ export default function EnhancedDashboardPage() {
     } catch {
       setError('Failed to fetch tickets');
     } finally {
-      setLoading(false);
+      setTicketsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (session) {
+    if (session && status === 'authenticated') {
       fetchTickets();
+      setLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [session, filters]);
+  }, [session, filters, status]);
 
   // Handle filter changes
   const handleFilterChange = (key: string, value: string) => {
@@ -156,23 +165,32 @@ export default function EnhancedDashboardPage() {
 
   // Delete ticket
   const handleDeleteTicket = async (ticketId: string) => {
-    if (!confirm('Are you sure you want to delete this ticket?')) {
-      return;
-    }
+    const ticket = tickets.find(t => t._id === ticketId);
+    setDeleteDialog({
+      isOpen: true,
+      ticketId,
+      ticketTitle: ticket?.title || 'this ticket'
+    });
+  };
 
+  const confirmDeleteTicket = async () => {
     try {
-      const response = await fetch(`/api/tickets/${ticketId}`, {
+      const response = await fetch(`/api/tickets/${deleteDialog.ticketId}`, {
         method: 'DELETE'
       });
 
       if (response.ok) {
         fetchTickets(); // Refresh tickets
+        setDeleteDialog({ isOpen: false, ticketId: '', ticketTitle: '' });
+        // TODO: Add success toast
       } else {
         const data = await response.json();
         setError(data.error || 'Failed to delete ticket');
+        setDeleteDialog({ isOpen: false, ticketId: '', ticketTitle: '' });
       }
     } catch {
       setError('Failed to delete ticket');
+      setDeleteDialog({ isOpen: false, ticketId: '', ticketTitle: '' });
     }
   };
 
@@ -225,8 +243,75 @@ export default function EnhancedDashboardPage() {
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Skeleton */}
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div>
+                <div className="h-8 bg-gray-200 rounded w-48 mb-2 animate-pulse"></div>
+                <div className="h-4 bg-gray-200 rounded w-64 animate-pulse"></div>
+              </div>
+              <div className="flex space-x-4">
+                <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
+                <div className="h-10 bg-gray-200 rounded w-20 animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Skeleton */}
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {/* Stats Skeleton */}
+            <SkeletonStats />
+
+            {/* Filters Skeleton */}
+            <div className="bg-white shadow rounded-lg p-6 mb-6">
+              <div className="flex flex-wrap gap-4 items-center justify-between">
+                <div className="flex flex-wrap gap-4">
+                  <div className="h-10 bg-gray-200 rounded w-24 animate-pulse"></div>
+                  <div className="h-10 bg-gray-200 rounded w-28 animate-pulse"></div>
+                  <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
+                  <div className="h-10 bg-gray-200 rounded w-36 animate-pulse"></div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="h-10 bg-gray-200 rounded w-64 animate-pulse"></div>
+                  <div className="h-10 bg-gray-200 rounded w-16 animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Create Button Skeleton */}
+            <div className="mb-6">
+              <div className="h-10 bg-gray-200 rounded w-40 animate-pulse"></div>
+            </div>
+
+            {/* Tickets List Skeleton */}
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+              <div className="px-4 py-5 sm:px-6">
+                <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+              </div>
+              <ul className="divide-y divide-gray-200">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <SkeletonListItem key={i} />
+                ))}
+              </ul>
+            </div>
+          </div>
+        </main>
+  
+        {/* Delete Confirmation Dialog */}
+        <ConfirmDialog
+          isOpen={deleteDialog.isOpen}
+          onClose={() => setDeleteDialog({ isOpen: false, ticketId: '', ticketTitle: '' })}
+          onConfirm={confirmDeleteTicket}
+          title="Delete Ticket"
+          message={`Are you sure you want to delete "${deleteDialog.ticketTitle}"? This action cannot be undone.`}
+          confirmText="Delete"
+          confirmVariant="danger"
+          loading={false}
+        />
       </div>
     );
   }
@@ -279,7 +364,7 @@ export default function EnhancedDashboardPage() {
       <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
           {/* Statistics Cards */}
-          {stats && (
+          {stats ? (
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
               <div className="bg-white p-4 rounded-lg shadow">
                 <h3 className="text-sm font-medium text-gray-500">Total Tickets</h3>
@@ -298,6 +383,8 @@ export default function EnhancedDashboardPage() {
                 <p className="text-2xl font-bold text-red-600">{stats.byPriority.urgent || 0}</p>
               </div>
             </div>
+          ) : (
+            <SkeletonStats />
           )}
 
           {/* Filters and Search */}
@@ -498,7 +585,13 @@ export default function EnhancedDashboardPage() {
                 </div>
               )}
             </div>
-            {tickets.length === 0 ? (
+            {ticketsLoading ? (
+              <ul className="divide-y divide-gray-200">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <SkeletonListItem key={i} />
+                ))}
+              </ul>
+            ) : tickets.length === 0 ? (
               <div className="px-4 py-5 sm:px-6 text-center text-gray-500">
                 No tickets found. {filters.search || filters.status !== 'all' || filters.priority !== 'all' || filters.category !== 'all' ? 'Try adjusting your filters.' : 'Create your first ticket above.'}
               </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { SkeletonCard, SkeletonListItem, SkeletonForm } from '@/components/Skeleton';
 
 interface Ticket {
   _id: string;
@@ -208,8 +209,65 @@ export default function TicketDetailPage({ params }: { params: Promise<{ id: str
 
   if (status === 'loading' || loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-gray-600">Loading...</div>
+      <div className="min-h-screen bg-gray-50">
+        {/* Header Skeleton */}
+        <header className="bg-white shadow">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex justify-between items-center py-6">
+              <div className="flex items-center space-x-4">
+                <div className="h-6 bg-gray-200 rounded w-32 animate-pulse"></div>
+                <div className="h-8 bg-gray-200 rounded w-40 animate-pulse"></div>
+              </div>
+              <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main Content Skeleton */}
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {/* Ticket Details Skeleton */}
+            <SkeletonCard />
+
+            {/* Tabs Skeleton */}
+            <div className="bg-white shadow rounded-lg">
+              <div className="border-b border-gray-200">
+                <div className="flex">
+                  <div className="py-2 px-4 border-b-2 border-gray-800">
+                    <div className="h-5 bg-gray-200 rounded w-20 animate-pulse"></div>
+                  </div>
+                  <div className="py-2 px-4">
+                    <div className="h-5 bg-gray-200 rounded w-16 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6">
+                {/* Comment Form Skeleton */}
+                <SkeletonForm />
+
+                {/* Comments List Skeleton */}
+                <div className="space-y-4 mt-6">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center space-x-2">
+                          <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                          <div className="h-5 bg-gray-200 rounded w-12 animate-pulse"></div>
+                        </div>
+                        <div className="h-3 bg-gray-200 rounded w-24 animate-pulse"></div>
+                      </div>
+                      <div className="space-y-2">
+                        <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
     );
   }
